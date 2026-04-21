@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌸 Sudoku Printanier · Souha Yassmine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Nunito:wght@300;400;600;700&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --pink:    #f9a8d4;
+  --pink2:   #ec4899;
+  --rose:    #fda4af;
+  --peach:   #fed7aa;
+  --yellow:  #fde68a;
+  --lime:    #bbf7d0;
+  --mint:    #6ee7b7;
+  --sky:     #bae6fd;
+  --lavender:#ddd6fe;
+  --white:   #fff8fc;
+  --bg1:     #fff0f8;
+  --bg2:     #e0f2fe;
+  --text:    #7c3aed;
+  --text2:   #be185d;
+}
+
+html{ scroll-behavior:smooth; }
+
+body{
+  min-height:100vh;
+  background: linear-gradient(160deg,
+    #fce7f3 0%, #fdf4ff 15%,
+    #eff6ff 35%, #ecfdf5 55%,
+    #fefce8 75%, #fff1f2 100%);
+  background-attachment:fixed;
+  display:flex; flex-direction:column; align-items:center;
+  font-family:'Nunito',sans-serif;
+  color:var(--text2);
+  padding:20px 12px 0;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ── PETALS ── */
+#petals{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.petal{
+  position:absolute;
+  font-size:var(--fs);
+  opacity:0;
+  animation:petalFall var(--dur) var(--del) ease-in infinite;
+  filter:drop-shadow(0 2px 4px rgba(244,114,182,.3));
+}
+@keyframes petalFall{
+  0%,100%{opacity:0;transform:none;}
+}
+
+/* ── BUTTERFLIES ── */
+.butterfly{
+  position:fixed;
+  font-size:22px;
+  animation:flyBy var(--fb) var(--fd) ease-in-out infinite alternate;
+  filter:drop-shadow(0 2px 6px rgba(167,139,250,.4));
+  z-index:1;
+  pointer-events:none;
+}
+@keyframes flyBy{
+  from{transform:translateX(var(--fx1)) translateY(var(--fy1)) rotate(-10deg);}
+  to  {transform:translateX(var(--fx2)) translateY(var(--fy2)) rotate(10deg);}
+}
+
+/* ── TITLE ── */
+.title-wrap{
+  text-align:center; margin-bottom:16px;
+  position:relative; z-index:2;
+  animation:springIn .9s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes springIn{
+  from{opacity:0;transform:scale(.7) translateY(-20px);}
+  to  {opacity:1;transform:scale(1)  translateY(0);}
+}
+.title-emoji{
+  font-size:32px;
+  display:block; margin-bottom:4px;
+  animation:wobble 3s ease-in-out infinite;
+}
+@keyframes wobble{
+  0%,100%{transform:rotate(-5deg) scale(1);}
+  25%    {transform:rotate(5deg)  scale(1.1);}
+  50%    {transform:rotate(-3deg) scale(1);}
+  75%    {transform:rotate(4deg)  scale(1.08);}
+}
+h1{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(26px,5.5vw,42px);
+  font-weight:700; letter-spacing:4px;
+  background:linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4,#10b981);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 2px 8px rgba(236,72,153,.25));
+  animation:rainbowShift 4s linear infinite;
+  background-size:300% 100%;
+}
+@keyframes rainbowShift{
+  0%  {background-position:0%   50%;}
+  50% {background-position:100% 50%;}
+  100%{background-position:0%   50%;}
+}
+.subtitle{
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(13px,2.5vw,17px);
+  color:#f472b6;
+  margin-top:3px;
+  animation:fadeUp .8s .3s both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── STATS ── */
+.stats{
+  display:flex; gap:16px; align-items:center; flex-wrap:wrap; justify-content:center;
+  margin-bottom:12px; position:relative; z-index:2;
+  animation:fadeUp .8s .2s both;
+}
+.stat-card{
+  background:white;
+  border-radius:16px;
+  padding:8px 18px;
+  text-align:center;
+  box-shadow:0 4px 20px rgba(236,72,153,.12);
+  border:2px solid var(--c,#fda4af);
+  transition:transform .2s;
+}
+.stat-card:hover{transform:translateY(-2px);}
+.stat-label{font-size:8px;letter-spacing:2px;color:#9ca3af;font-weight:700;margin-bottom:2px;text-transform:uppercase;}
+.stat-value{font-size:18px;font-weight:700;color:var(--c,#ec4899);}
+
+/* ── DIFFICULTY ── */
+.diff-wrap{display:flex;gap:8px;margin-bottom:14px;position:relative;z-index:2;animation:fadeUp .8s .3s both;flex-wrap:wrap;justify-content:center;}
+.diff-btn{
+  background:white;
+  border:2px solid transparent;
+  border-radius:20px;
+  font-family:'Nunito',sans-serif;
+  font-size:11px; font-weight:700; letter-spacing:1px;
+  padding:6px 18px; cursor:pointer;
+  text-transform:uppercase; transition:all .25s;
+  color:#9ca3af;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.diff-btn:nth-child(1){--dc:#86efac;--dt:#16a34a;}
+.diff-btn:nth-child(2){--dc:#fda4af;--dt:#be185d;}
+.diff-btn:nth-child(3){--dc:#c4b5fd;--dt:#7c3aed;}
+.diff-btn:hover,.diff-btn.sel{
+  border-color:var(--dc);
+  color:var(--dt);
+  background:linear-gradient(135deg,white,color-mix(in srgb,var(--dc) 20%,white));
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px color-mix(in srgb,var(--dc) 40%,transparent);
+}
+
+/* ── BOARD ── */
+.board-wrap{
+  position:relative; z-index:2;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:
+    0 20px 60px rgba(236,72,153,.15),
+    0 8px 25px rgba(139,92,246,.1),
+    0 0 0 4px white,
+    0 0 0 6px rgba(249,168,212,.4);
+  margin-bottom:18px;
+  animation:boardPop .9s .4s cubic-bezier(.34,1.56,.64,1) both;
+  background:white;
+}
+@keyframes boardPop{
+  from{opacity:0;transform:scale(.85) rotate(-2deg);}
+  to  {opacity:1;transform:scale(1)   rotate(0deg);}
+}
+.board{
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  grid-template-rows:repeat(9,1fr);
+  border-radius:16px;
+  overflow:hidden;
+}
+
+.cell{
+  width:clamp(38px,9.5vw,58px);
+  height:clamp(38px,9.5vw,58px);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  font-size:clamp(16px,3.5vw,24px);
+  font-weight:700;
+  position:relative; user-select:none;
+  transition:background .12s, transform .12s;
+  border:1px solid rgba(209,213,219,.4);
+  background:#fffbfe;
+  color:#374151;
+}
+.cell:hover:not(.given){transform:scale(1.08);z-index:3;}
+
+/* thick box borders */
+.cell[data-c="2"],.cell[data-c="5"]{border-right:2.5px solid rgba(249,168,212,.7);}
+.cell[data-c="0"],.cell[data-c="3"],.cell[data-c="6"]{border-left:2.5px solid rgba(249,168,212,.7);}
+.cell[data-r="2"],.cell[data-r="5"]{border-bottom:2.5px solid rgba(249,168,212,.7);}
+.cell[data-r="0"],.cell[data-r="3"],.cell[data-r="6"]{border-top:2.5px solid rgba(249,168,212,.7);}
+
+.cell.given{
+  color:#1e1b4b;
+  background:linear-gradient(135deg,#fdf4ff,#fff0f8);
+}
+.cell.user{color:#7c3aed;}
+.cell.error{color:#dc2626!important;}
+
+/* box colors */
+.cell.box-0{--bx:#fce7f3;}
+.cell.box-1{--bx:#eff6ff;}
+.cell.box-2{--bx:#ecfdf5;}
+.cell.box-3{--bx:#fefce8;}
+.cell.box-4{--bx:#fdf4ff;}
+.cell.box-5{--bx:#fff1f2;}
+.cell.box-6{--bx:#f0fdf4;}
+.cell.box-7{--bx:#faf5ff;}
+.cell.box-8{--bx:#fff7ed;}
+
+.cell.hl         {background:color-mix(in srgb,var(--bx,#fce7f3) 60%,white)!important;}
+.cell.same       {background:color-mix(in srgb,#fbcfe8 60%,white)!important;}
+.cell.sel        {background:linear-gradient(135deg,#fbcfe8,#ddd6fe)!important;transform:scale(1.06);box-shadow:0 4px 16px rgba(236,72,153,.3);z-index:3;}
+.cell.conflict-bg{background:linear-gradient(135deg,#fee2e2,#fecaca)!important;}
+
+/* pop */
+.cell.pop{animation:cellPop .25s ease;}
+@keyframes cellPop{0%{transform:scale(1);}50%{transform:scale(1.25);}100%{transform:scale(1);}}
+
+/* Notes */
+.notes-grid{
+  position:absolute;inset:1px;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  pointer-events:none;
+}
+.note-num{
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(6px,1.1vw,8px);
+  color:#c084fc; font-weight:600; line-height:1;
+}
+
+/* ── NUMPAD ── */
+.numpad{
+  display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;
+  position:relative;z-index:2;
+  animation:fadeUp .8s .5s both;
+}
+.num-btn{
+  width:clamp(36px,8vw,50px); height:clamp(36px,8vw,50px);
+  border:none; border-radius:50%;
+  font-family:'Nunito',sans-serif;
+  font-size:clamp(14px,3vw,20px); font-weight:700;
+  cursor:pointer; transition:all .18s;
+  box-shadow:0 3px 10px rgba(0,0,0,.1);
+  position:relative; overflow:hidden;
+}
+.num-btn::before{
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background:rgba(255,255,255,.25);
+  transform:scale(0); transition:transform .3s;
+}
+.num-btn:hover::before{transform:scale(1);}
+.num-btn:hover{transform:translateY(-3px) scale(1.1); box-shadow:0 8px 20px rgba(0,0,0,.15);}
+.num-btn:active{transform:scale(.95);}
+/* Rainbow numpad */
+.num-btn:nth-child(1){background:linear-gradient(135deg,#fda4af,#fb7185);}
+.num-btn:nth-child(2){background:linear-gradient(135deg,#fdba74,#f97316);}
+.num-btn:nth-child(3){background:linear-gradient(135deg,#fde68a,#fbbf24);}
+.num-btn:nth-child(4){background:linear-gradient(135deg,#bbf7d0,#34d399);}
+.num-btn:nth-child(5){background:linear-gradient(135deg,#6ee7b7,#10b981);}
+.num-btn:nth-child(6){background:linear-gradient(135deg,#bae6fd,#38bdf8);}
+.num-btn:nth-child(7){background:linear-gradient(135deg,#a5f3fc,#22d3ee);}
+.num-btn:nth-child(8){background:linear-gradient(135deg,#c4b5fd,#8b5cf6);}
+.num-btn:nth-child(9){background:linear-gradient(135deg,#f9a8d4,#ec4899);}
+.num-btn{color:white; text-shadow:0 1px 3px rgba(0,0,0,.2);}
+
+/* ── ACTIONS ── */
+.actions{
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  position:relative;z-index:2;
+  animation:fadeUp .8s .55s both;
+}
+.act-btn{
+  background:white;
+  border:2px solid #fbcfe8;
+  border-radius:20px;
+  color:#be185d;
+  font-family:'Nunito',sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:.5px;
+  padding:8px 16px; cursor:pointer;
+  text-transform:uppercase; transition:all .2s;
+  box-shadow:0 2px 8px rgba(236,72,153,.1);
+  white-space:nowrap;
+}
+.act-btn:hover{
+  background:linear-gradient(135deg,#fce7f3,#ede9fe);
+  border-color:#f472b6;
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(236,72,153,.2);
+}
+.act-btn.on{
+  background:linear-gradient(135deg,#fce7f3,#ede9fe);
+  border-color:#a855f7; color:#7c3aed;
+}
+
+/* ── CREDITS ── */
+.credits{
+  margin-top:60px;
+  width:100%; max-width:640px;
+  text-align:center;
+  position:relative; z-index:2;
+  padding-bottom:60px;
+}
+
+.credits-flowers{
+  font-size:28px; letter-spacing:6px; margin-bottom:20px;
+  animation:flowersWave 3s ease-in-out infinite;
+}
+@keyframes flowersWave{
+  0%,100%{transform:translateY(0);}
+  25%    {transform:translateY(-4px);}
+  75%    {transform:translateY(4px);}
+}
+
+.credits-banner{
+  background:linear-gradient(135deg,
+    rgba(252,231,243,.9), rgba(237,233,254,.9),
+    rgba(219,234,254,.9), rgba(209,250,229,.9));
+  border-radius:24px;
+  padding:36px 32px 32px;
+  box-shadow:0 10px 40px rgba(236,72,153,.12),0 0 0 3px white,0 0 0 5px rgba(249,168,212,.3);
+  position:relative; overflow:hidden;
+  animation:bannerFloat 4s ease-in-out infinite;
+}
+@keyframes bannerFloat{
+  0%,100%{transform:translateY(0) rotate(-.3deg);}
+  50%    {transform:translateY(-6px) rotate(.3deg);}
+}
+.credits-banner::before{
+  content:''; position:absolute; inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f9a8d4' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+
+.credits-by{
+  font-family:'Nunito',sans-serif;
+  font-size:11px; font-weight:700; letter-spacing:3px;
+  color:#f472b6; text-transform:uppercase; margin-bottom:12px;
+  animation:fadeUp 1s 1s both;
+}
+
+.credits-name{
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(28px,7vw,46px);
+  font-weight:700;
+  background:linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 2px 8px rgba(236,72,153,.2));
+  line-height:1.2; margin-bottom:4px;
+  animation:nameIn 1.2s 1.1s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes nameIn{
+  from{opacity:0;transform:scale(.6) translateY(20px);}
+  to  {opacity:1;transform:scale(1)  translateY(0);}
+}
+
+.credits-surname{
+  font-family:'Playfair Display',serif;
+  font-style:italic; font-weight:400;
+  font-size:clamp(16px,4vw,22px);
+  color:#a78bfa;
+  letter-spacing:3px; margin-bottom:24px;
+  animation:nameIn 1.2s 1.25s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+.credits-hearts{
+  display:flex; justify-content:center; gap:6px;
+  margin-bottom:20px;
+  animation:fadeUp 1s 1.5s both;
+}
+.heart{
+  font-size:18px;
+  animation:heartPop var(--hd) var(--hdel) ease-in-out infinite;
+}
+@keyframes heartPop{
+  0%,100%{transform:scale(1);}
+  30%    {transform:scale(1.4);}
+  60%    {transform:scale(.9);}
+}
+
+.credits-message{
+  font-family:'Playfair Display',serif;
+  font-style:italic;
+  font-size:clamp(14px,3vw,18px);
+  color:#6d28d9;
+  line-height:1.8; letter-spacing:.5px;
+  animation:fadeUp 1s 1.6s both;
+}
+.credits-message .highlight{
+  font-style:normal; font-weight:700;
+  background:linear-gradient(90deg,#ec4899,#8b5cf6);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.credits-footer{
+  margin-top:20px;
+  display:flex; justify-content:center; gap:8px;
+  font-size:20px;
+  animation:fadeUp 1s 1.8s both;
+}
+.cf{animation:spin var(--cs) linear infinite;}
+@keyframes spin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+
+/* ── WIN ── */
+#win-overlay{
+  display:none; position:fixed; inset:0;
+  background:rgba(253,242,248,.92);
+  backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+  z-index:200;
+}
+#win-overlay.show{display:flex; animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.win-card{
+  background:linear-gradient(135deg,#fff,#fce7f3,#ede9fe);
+  border-radius:28px;
+  padding:48px 56px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(236,72,153,.2),0 0 0 4px white,0 0 0 7px rgba(249,168,212,.4);
+  animation:cardIn .5s .1s cubic-bezier(.34,1.56,.64,1) both;
+  position:relative; overflow:hidden;
+}
+@keyframes cardIn{from{opacity:0;transform:scale(.7)rotate(-5deg);}to{opacity:1;transform:scale(1)rotate(0);}}
+.win-emoji{font-size:56px; animation:wobble 1s ease-in-out infinite; display:block; margin-bottom:12px;}
+.win-title{
+  font-family:'Dancing Script',cursive; font-size:clamp(32px,7vw,52px); font-weight:700;
+  background:linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:12px;
+}
+.win-stat{font-size:14px;color:#be185d;margin-bottom:5px;font-weight:600;}
+.win-cta{
+  margin-top:24px; font-size:11px; letter-spacing:2px;
+  color:#f472b6; font-weight:700; text-transform:uppercase;
+  animation:pulse 1.5s ease infinite;
+}
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+.win-confetti{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;}
+.conf-dot{
+  position:absolute;border-radius:3px;
+  animation:confettiFall var(--cd) var(--cdel) ease-in both;
+}
+@keyframes confettiFall{
+  from{opacity:1;transform:translateY(-10px)rotate(0);}
+  to  {opacity:0;transform:translateY(220px)rotate(720deg);}
+}
+</style>
+</head>
+<body>
+
+<div id="petals"></div>
+
+<!-- TITLE -->
+<div class="title-wrap">
+  <span class="title-emoji">🌸</span>
+  <h1>SUDOKU</h1>
+  <div class="subtitle">Printemps · 春 · Spring</div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-card" style="--c:#ec4899">
+    <div class="stat-label">⏱ Temps</div>
+    <div class="stat-value" id="timer">00:00</div>
+  </div>
+  <div class="stat-card" style="--c:#8b5cf6">
+    <div class="stat-label">💔 Erreurs</div>
+    <div class="stat-value" id="mistakes">0/3</div>
+  </div>
+  <div class="stat-card" style="--c:#10b981">
+    <div class="stat-label">🌿 Niveau</div>
+    <div class="stat-value" style="font-size:13px;letter-spacing:1px" id="lvl-display">MOYEN</div>
+  </div>
+</div>
+
+<!-- DIFFICULTY -->
+<div class="diff-wrap">
+  <button class="diff-btn" data-d="facile">🌱 Facile</button>
+  <button class="diff-btn sel" data-d="moyen">🌸 Moyen</button>
+  <button class="diff-btn" data-d="difficile">🌺 Difficile</button>
+</div>
+
+<!-- BOARD -->
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<!-- NUMPAD -->
+<div class="numpad">
+  <button class="num-btn" data-n="1">1</button>
+  <button class="num-btn" data-n="2">2</button>
+  <button class="num-btn" data-n="3">3</button>
+  <button class="num-btn" data-n="4">4</button>
+  <button class="num-btn" data-n="5">5</button>
+  <button class="num-btn" data-n="6">6</button>
+  <button class="num-btn" data-n="7">7</button>
+  <button class="num-btn" data-n="8">8</button>
+  <button class="num-btn" data-n="9">9</button>
+</div>
+
+<!-- ACTIONS -->
+<div class="actions">
+  <button class="act-btn" id="note-btn">✏️ Notes OFF</button>
+  <button class="act-btn" id="erase-btn">⌫ Effacer</button>
+  <button class="act-btn" id="undo-btn">↩ Annuler</button>
+  <button class="act-btn" id="new-btn">🌸 Nouveau</button>
+</div>
+
+<!-- CREDITS -->
+<footer class="credits">
+  <div class="credits-flowers">🌸 🌷 🌼 🦋 🌹 🌻 🌺</div>
+  <div class="credits-banner">
+    <div class="credits-by">✨ Créé avec passion par ✨</div>
+    <div class="credits-name">Souha Yassmine</div>
+    <div class="credits-surname">Elalaoui</div>
+    <div class="credits-hearts">
+      <span class="heart" style="--hd:1.2s;--hdel:0s">🌸</span>
+      <span class="heart" style="--hd:1.4s;--hdel:.15s">💕</span>
+      <span class="heart" style="--hd:1.1s;--hdel:.3s">🌷</span>
+      <span class="heart" style="--hd:1.5s;--hdel:.1s">💖</span>
+      <span class="heart" style="--hd:1.3s;--hdel:.25s">🌼</span>
+      <span class="heart" style="--hd:1.2s;--hdel:.4s">💗</span>
+      <span class="heart" style="--hd:1.4s;--hdel:.05s">🌺</span>
+    </div>
+    <div class="credits-message">
+      Fait par amour pour<br>
+      <span class="highlight">tous ceux qui sont intéressés</span> 🌿
+    </div>
+    <div class="credits-footer">
+      <span class="cf" style="--cs:4s">🌸</span>
+      <span class="cf" style="--cs:5s">🦋</span>
+      <span class="cf" style="--cs:3s">🌷</span>
+      <span class="cf" style="--cs:6s">🌼</span>
+      <span class="cf" style="--cs:4.5s">🌺</span>
+    </div>
+  </div>
+</footer>
+
+<!-- WIN -->
+<div id="win-overlay">
+  <div class="win-card">
+    <div class="win-confetti" id="confetti"></div>
+    <span class="win-emoji">🎉</span>
+    <div class="win-title">Bravo !</div>
+    <div class="win-stat" id="win-time"></div>
+    <div class="win-stat" id="win-err"></div>
+    <div class="win-cta">🌸 Cliquer pour rejouer 🌸</div>
+  </div>
+</div>
+
+<script>
+// ── PETALS ────────────────────────────────────────────────────────
+(function(){
+  const emojis=['🌸','🌷','🌼','🌺','🍀','🌿','🦋','✨','💮','🏵️'];
+  const p=document.getElementById('petals');
+  for(let i=0;i<45;i++){
+    const d=document.createElement('div');
+    d.className='petal';
+    d.textContent=emojis[Math.random()*emojis.length|0];
+    d.style.cssText=`left:${Math.random()*100}%;top:${-5+Math.random()*10}%;--fs:${14+Math.random()*16}px;--dur:${6+Math.random()*10}s;--del:${Math.random()*12}s;`;
+    p.appendChild(d);
+  }
+})();
+
+// ── SUDOKU ENGINE ─────────────────────────────────────────────────
+const REMOVALS={facile:34,moyen:46,difficile:54};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*i|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+function isValid(b,r,c,n){
+  for(let i=0;i<9;i++){
+    if(b[r][i]===n||b[i][c]===n) return false;
+    const br=3*(r/3|0)+(i/3|0),bc=3*(c/3|0)+(i%3);
+    if(b[br][bc]===n) return false;
+  }
+  return true;
+}
+function solve(b){
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(!b[r][c]){
+    for(const n of shuffle([1,2,3,4,5,6,7,8,9])){
+      if(isValid(b,r,c,n)){b[r][c]=n;if(solve(b))return true;b[r][c]=0;}
+    }
+    return false;
+  }
+  return true;
+}
+function makeBoard(){const b=Array.from({length:9},()=>Array(9).fill(0));solve(b);return b;}
+function makePuzzle(sol,rem){
+  const p=sol.map(r=>[...r]);
+  const cells=shuffle([...Array(81).keys()]);
+  for(let i=0;i<rem;i++) p[cells[i]/9|0][cells[i]%9]=0;
+  return p;
+}
+function conflicts(g){
+  const cf=Array.from({length:9},()=>Array(9).fill(false));
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+    const v=g[r][c];if(!v)continue;
+    for(let i=0;i<9;i++){
+      if(i!==c&&g[r][i]===v){cf[r][c]=cf[r][i]=true;}
+      if(i!==r&&g[i][c]===v){cf[r][c]=cf[i][c]=true;}
+    }
+    const br=(r/3|0)*3,bc=(c/3|0)*3;
+    for(let i=br;i<br+3;i++) for(let j=bc;j<bc+3;j++)
+      if((i!==r||j!==c)&&g[i][j]===v) cf[r][c]=cf[i][j]=true;
+  }
+  return cf;
+}
+
+// ── STATE ─────────────────────────────────────────────────────────
+let solution,puzzle,grid,fixed,notes,sel=null;
+let noteMode=false,mistakes=0,timerSec=0,timerID=null,history=[];
+let difficulty='moyen';
+const BOX_COLORS=[0,1,2,1,2,0,2,0,1];
+function boxIdx(r,c){return (r/3|0)*3+(c/3|0);}
+
+const boardEl  =document.getElementById('board');
+const timerEl  =document.getElementById('timer');
+const mistakeEl=document.getElementById('mistakes');
+const lvlEl    =document.getElementById('lvl-display');
+const noteBtn  =document.getElementById('note-btn');
+const overlay  =document.getElementById('win-overlay');
+const pad=n=>String(n).padStart(2,'0');
+const fmt=s=>`${pad(s/60|0)}:${pad(s%60)}`;
+
+// ── RENDER ────────────────────────────────────────────────────────
+function render(){
+  const cf=conflicts(grid);
+  const selV=sel?grid[sel[0]][sel[1]]:0;
+  boardEl.querySelectorAll('.cell').forEach(cell=>{
+    const r=+cell.dataset.r,c=+cell.dataset.c;
+    const v=grid[r][c],gv=fixed[r][c];
+    const isSel =sel&&sel[0]===r&&sel[1]===c;
+    const isHL  =sel&&(sel[0]===r||sel[1]===c||
+                 ((r/3|0)===(sel[0]/3|0)&&(c/3|0)===(sel[1]/3|0)));
+    const isSame=selV&&v===selV;
+    const isErr =cf[r][c];
+    const bi    =boxIdx(r,c);
+    cell.className=`cell box-${bi}`+(gv?' given':' user');
+    if(isErr)       cell.classList.add('conflict-bg','error');
+    else if(isSel)  cell.classList.add('sel');
+    else if(isSame) cell.classList.add('same');
+    else if(isHL)   cell.classList.add('hl');
+    cell.innerHTML='';
+    if(v){
+      cell.textContent=v;
+    } else if(notes[r][c].size){
+      const ng=document.createElement('div');ng.className='notes-grid';
+      for(let n=1;n<=9;n++){
+        const nd=document.createElement('div');nd.className='note-num';
+        nd.textContent=notes[r][c].has(n)?n:'';ng.appendChild(nd);
+      }
+      cell.appendChild(ng);
+    }
+  });
+}
+
+// ── BUILD DOM ─────────────────────────────────────────────────────
+function buildDOM(){
+  boardEl.innerHTML='';
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+    const cell=document.createElement('div');
+    cell.className='cell';cell.dataset.r=r;cell.dataset.c=c;
+    cell.addEventListener('click',()=>{sel=[r,c];render();});
+    boardEl.appendChild(cell);
+  }
+}
+
+// ── START ─────────────────────────────────────────────────────────
+function startGame(diff){
+  if(diff) difficulty=diff;
+  clearInterval(timerID);
+  timerSec=0;mistakes=0;sel=null;noteMode=false;history=[];
+  timerEl.textContent='00:00';
+  mistakeEl.textContent='0/3';
+  mistakeEl.style.color='#8b5cf6';
+  lvlEl.textContent=difficulty.toUpperCase();
+  noteBtn.textContent='✏️ Notes OFF';noteBtn.classList.remove('on');
+  solution=makeBoard();
+  puzzle=makePuzzle(solution,REMOVALS[difficulty]);
+  grid=puzzle.map(r=>[...r]);
+  fixed=puzzle.map(r=>r.map(v=>v!==0));
+  notes=Array.from({length:9},()=>Array.from({length:9},()=>new Set()));
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('sel',b.dataset.d===difficulty));
+  render();
+  timerID=setInterval(()=>{timerSec++;timerEl.textContent=fmt(timerSec);},1000);
+}
+
+// ── INPUT ─────────────────────────────────────────────────────────
+function input(n){
+  if(!sel)return;
+  const[r,c]=sel;if(fixed[r][c])return;
+  history.push({grid:grid.map(row=>[...row]),notes:notes.map(row=>row.map(s=>new Set(s)))});
+  if(noteMode){
+    if(n===0)notes[r][c].clear();
+    else notes[r][c].has(n)?notes[r][c].delete(n):notes[r][c].add(n);
+    render();return;
+  }
+  if(n!==0&&solution[r][c]!==n){
+    mistakes++;mistakeEl.textContent=mistakes+'/3';
+    if(mistakes>=3)mistakeEl.style.color='#dc2626';
+  }
+  grid[r][c]=n;if(n)notes[r][c].clear();
+  const cellEl=boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+  if(cellEl){cellEl.classList.remove('pop');void cellEl.offsetWidth;cellEl.classList.add('pop');}
+  const won=grid.every((row,ri)=>row.every((v,ci)=>v===solution[ri][ci]));
+  render();
+  if(won){
+    clearInterval(timerID);
+    setTimeout(()=>{
+      document.getElementById('win-time').textContent='🕐 Temps : '+fmt(timerSec);
+      document.getElementById('win-err').textContent='💔 Erreurs : '+mistakes;
+      spawnConfetti();overlay.classList.add('show');
+    },350);
+  }
+}
+function undo(){if(!history.length)return;const l=history.pop();grid=l.grid;notes=l.notes;render();}
+
+// ── CONFETTI ──────────────────────────────────────────────────────
+function spawnConfetti(){
+  const c=document.getElementById('confetti');c.innerHTML='';
+  const cols=['#f9a8d4','#fde68a','#bbf7d0','#bae6fd','#c4b5fd','#fda4af','#6ee7b7'];
+  for(let i=0;i<55;i++){
+    const d=document.createElement('div');d.className='conf-dot';
+    d.style.cssText=`left:${Math.random()*100}%;background:${cols[Math.random()*cols.length|0]};--cd:${.7+Math.random()*1.8}s;--cdel:${Math.random()*.9}s;width:${5+Math.random()*8}px;height:${5+Math.random()*8}px;`;
+    c.appendChild(d);
+  }
+}
+
+// ── EVENTS ───────────────────────────────────────────────────────
+document.querySelectorAll('.diff-btn').forEach(b=>b.addEventListener('click',()=>startGame(b.dataset.d)));
+document.querySelectorAll('.num-btn').forEach(b=>b.addEventListener('click',()=>input(+b.dataset.n)));
+document.getElementById('erase-btn').addEventListener('click',()=>input(0));
+document.getElementById('undo-btn').addEventListener('click',undo);
+document.getElementById('new-btn').addEventListener('click',()=>startGame());
+noteBtn.addEventListener('click',()=>{noteMode=!noteMode;noteBtn.textContent='✏️ Notes '+(noteMode?'ON':'OFF');noteBtn.classList.toggle('on',noteMode);});
+overlay.addEventListener('click',()=>{overlay.classList.remove('show');startGame();});
+document.addEventListener('keydown',e=>{
+  if(e.key>='1'&&e.key<='9'){input(+e.key);return;}
+  if(e.key==='Backspace'||e.key==='Delete'||e.key==='0'){input(0);return;}
+  if(e.key==='n'||e.key==='N'){noteBtn.click();return;}
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();return;}
+  if(!sel)return;
+  const[r,c]=sel;
+  if(e.key==='ArrowUp')   {sel=[Math.max(0,r-1),c];render();}
+  if(e.key==='ArrowDown') {sel=[Math.min(8,r+1),c];render();}
+  if(e.key==='ArrowLeft') {sel=[r,Math.max(0,c-1)];render();}
+  if(e.key==='ArrowRight'){sel=[r,Math.min(8,c+1)];render();}
+});
+
+// ── INIT ─────────────────────────────────────────────────────────
+buildDOM();
+startGame('moyen');
+</script>
+</body>
+</html>
